@@ -19,17 +19,27 @@ const items = [
 
 const obj = {};
 const dataUrl = 'http://localhost:7777';
+
 items.forEach(item => obj[[item]] = sessionStorage.getItem(item));
 
 export default function App() {
   const [storedData, setStoredData] = useState(obj);
   const [vehicleState, setVehicleState] = useState({});
   const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState("");
   useEffect(() => {
-    if (!storedData.access_token) authenticateUser();
-    else if (!storedData.id) storeVehicleId(storedData.access_token);
-    else retrieveVehicleState(storedData.access_token);
-  }, []);
+    if (!storedData.access_token) {
+      setStatus("loading");
+      authenticateUser();
+    }
+    if (!storedData.id) {
+      setStatus("loading");
+      storeVehicleId(storedData.access_token);
+    }
+    retrieveVehicleState(storedData.access_token);
+    setStatus("");
+
+  }, [storedData]);
 
   const authenticateUser = () => {
     axios.get(dataUrl).then(response => {
@@ -41,7 +51,7 @@ export default function App() {
   };
 
   const storeVehicleId = (accessToken) => {
-    axios.get(`${dataUrl}/vehicle/brutus/`, {
+    axios.get(`${dataUrl}/vehicles/`, {
       headers: {
         Authorization: `Bearer ${accessToken}`
       }
@@ -91,9 +101,10 @@ export default function App() {
     ]
   ];
 
-  return !loading && (
+  return (
     <>
       <Nav />
+      {status === 'loading' && <>Fetching data...</>}
       {metrics.map((stats, index) =>
         <Outer key={index}>
           <Grid>
